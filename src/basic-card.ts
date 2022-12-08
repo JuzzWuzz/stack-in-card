@@ -113,12 +113,15 @@ class BasicCard extends LitElement {
    */
   protected render(): TemplateResult {
     if (!this._hass || !this._config) return html``;
+    const entityState = this._hass.states[this._config.entity];
 
     try {
       return html`
         <ha-card>
           <div class="row">
-            <div class="label">Lol</div>
+            <div class="label">
+              ${entityState.attributes.friendly_name}: ${entityState.state}
+            </div>
           </div>
         </ha-card>
       `;
