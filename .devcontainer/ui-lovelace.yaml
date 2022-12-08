@@ -1,0 +1,4 @@
+views:
+  - cards:
+      - type: custom:basic-card
+        entity: light.bed_light
