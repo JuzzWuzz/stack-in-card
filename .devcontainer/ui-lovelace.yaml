@@ -1,4 +1,20 @@
 views:
   - cards:
-      - type: custom:basic-card
+      - type: entity
         entity: light.bed_light
+      - type: vertical-stack
+        cards:
+          - type: custom:lighteffect-card
+            entity: light.bed_light
+            title: "Always visible"
+          - type: custom:lighteffect-card
+            entity: light.bed_light
+            title: "Hide if off"
+            hide_if_off: true
+          - type: custom:lighteffect-card
+            entity: light.ceiling_lights
+            title: "Always visible with no effects"
+          - type: custom:lighteffect-card
+            entity: light.ceiling_lights
+            title: "Hide if no effects"
+            hide_if_no_effects: true

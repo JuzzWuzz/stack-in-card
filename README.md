@@ -1,4 +1,4 @@
-# Juzz Card by JuzzWuzz
+# LightEffect-Card by JuzzWuzz
 
 Created using this page: <https://www.thisdot.co/blog/how-to-setup-a-typescript-project-using-rollup-js>
 
@@ -90,7 +90,7 @@ help Shows this help
    ];
 
    export default {
-     input: "src/basic-card.ts",
+     input: "src/lighteffect-card.ts",
      output: {
        dir: "dist",
        sourcemap: dev ? true : false,
@@ -271,7 +271,7 @@ Used for finding linting problems
    }
    ```
 
-3. Run `npm start` to run the compile the code and server it. It can then be found at: `http://localhost:5000/basic-card.js`
+3. Run `npm start` to run the compile the code and server it. It can then be found at: `http://localhost:5000/lighteffect-card.js`
 
 ### Git
 

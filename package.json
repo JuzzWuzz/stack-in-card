@@ -1,8 +1,8 @@
 {
-  "name": "basic-card",
+  "name": "lighteffect-card",
   "version": "0.5.0",
   "description": "",
-  "main": "src/basic-card.ts",
+  "main": "src/lighteffect-card.ts",
   "scripts": {
     "build": "rimraf dist && npm run rollup",
     "release": "rimraf dist && npm run format && npm run lint && npm run rollup",
@@ -38,8 +38,8 @@
     "typescript": "4.7.4"
   },
   "dependencies": {
-    "@material/mwc-button": "^0.27.0",
     "custom-card-helpers": "^1.9.0",
+    "home-assistant-js-websocket": "^8.0.1",
     "lit": "^2.3.1",
     "moment": "^2.29.4"
   }

@@ -1,22 +1,26 @@
-import { LitElement, PropertyValues, TemplateResult, html } from "lit";
+import { LitElement, PropertyValues, TemplateResult, css, html } from "lit";
 import { property, customElement, state } from "lit/decorators.js";
-import { BasicCardConfig, ExternalBasicCardConfig } from "./types";
-import { HomeAssistant, LovelaceCard } from "custom-card-helpers";
+import { LightEffectCardConfig, ExternalLightEffectCardConfig } from "./types";
+import { HomeAssistant, LightEntity, LovelaceCard } from "./juzz-ha-helper";
 import * as pjson from "../package.json";
+
+export const stopPropagation = (ev) => ev.stopPropagation();
 
 /* eslint no-console: 0 */
 console.info(
-  `%c  BASIC-CARD  \n%c Version ${pjson.version} `,
+  `%c  LIGHTEFFECT-CARD  \n%c Version ${pjson.version} `,
   "color: orange; font-weight: bold; background: black",
   "color: white; font-weight: bold; background: dimgray",
 );
 
-@customElement("Basic-card")
+@customElement("lighteffect-card")
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-class BasicCard extends LitElement {
+class LightEffect extends LitElement {
   @property({ attribute: false }) private _hass?: HomeAssistant;
 
-  @state() private _config?: BasicCardConfig;
+  @property({ attribute: false }) private _entity?: LightEntity;
+
+  @state() private _config?: LightEffectCardConfig;
 
   private _initialSetupComplete = false;
 
@@ -52,18 +56,24 @@ class BasicCard extends LitElement {
   /**
    * Sets the config for the card
    */
-  public setConfig(config: ExternalBasicCardConfig): void {
+  public setConfig(config: ExternalLightEffectCardConfig): void {
     console.log("setConfig()");
     console.log(config);
 
     try {
       this._config = {
-        type: "custom:Basic-card",
-        entity: config.entity,
+        ...{
+          type: "custom:Basic-card",
+          // eslint-disable-next-line camelcase
+          hide_if_off: false,
+          // eslint-disable-next-line camelcase
+          hide_if_no_effects: false,
+        },
+        ...config,
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      throw new Error(`/// BASIC-CARD Invalid Config ///${e.message}`);
+      throw new Error(`/// LIGHTEFFECT-CARD Invalid Config ///${e.message}`);
     }
   }
 
@@ -78,14 +88,23 @@ class BasicCard extends LitElement {
       return false;
     }
 
+    // Check if the entity we are tracking has changed
+    const entityId = this._config.entity;
+    const oldHass = changedProps.get("_hass") as HomeAssistant | undefined;
+    if (
+      oldHass &&
+      this._hass &&
+      oldHass.states[entityId] !== this._hass.states[entityId]
+    ) {
+      console.log("Updating");
+      return true;
+    }
+
     // Only update on specific changes
     if (
       changedProps.has("_config") ||
       [
         "_config",
-        "_date",
-        "_startDate",
-        "_endDate",
       ].some((key) => changedProps.has(key))
     ) {
       console.log("Updating");
@@ -113,15 +132,38 @@ class BasicCard extends LitElement {
    */
   protected render(): TemplateResult {
     if (!this._hass || !this._config) return html``;
-    const entityState = this._hass.states[this._config.entity];
+    this._entity = this._hass.states[this._config.entity] as LightEntity;
+    const effectList = this._entity.attributes.effect_list ?? [];
 
     try {
+      if (
+        (this._config.hide_if_off && this._entity.state === "off") ||
+        (this._config.hide_if_no_effects && effectList.length === 0)
+      ) {
+        return html``;
+      }
       return html`
         <ha-card>
-          <div class="row">
-            <div class="label">
-              ${entityState.attributes.friendly_name}: ${entityState.state}
-            </div>
+          ${this._config?.title
+            ? html`
+                <h1 class="card-header">
+                  <div class="name">${this._config.title}</div>
+                </h1>
+              `
+            : html``}
+          <div class="card-content">
+            <ha-select
+              .label=${this._hass.localize("ui.card.light.effect")}
+              .value=${this._entity.attributes.effect || ""}
+              @selected=${this._effectChanged}
+              @closed=${stopPropagation}
+            >
+              ${effectList.map(
+                (effect: string) => html`
+                  <mwc-list-item .value=${effect}> ${effect} </mwc-list-item>
+                `,
+              )}
+            </ha-select>
           </div>
         </ha-card>
       `;
@@ -136,5 +178,25 @@ class BasicCard extends LitElement {
       });
       return html`${errorCard}`;
     }
+  }
+
+  static styles = css`
+    ha-select {
+      display: block;
+    }
+  `;
+
+  private _effectChanged(event) {
+    if (!this._hass || !this._entity) return;
+
+    const newEffect = event.target.value;
+
+    if (!newEffect || this._entity.attributes.effect === newEffect) return;
+
+    this._hass.callService("light", "turn_on", {
+      // eslint-disable-next-line camelcase
+      entity_id: this._entity.entity_id,
+      effect: newEffect,
+    });
   }
 }

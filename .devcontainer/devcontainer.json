@@ -1,5 +1,5 @@
 {
-  "name": "Mini Graph Card Development",
+  "name": "Light Effect Card Development",
   "image": "ghcr.io/ludeeus/devcontainer/generic:latest",
   "context": "..",
   "appPort": [
@@ -8,16 +8,20 @@
   ],
   "postCreateCommand": "npm install && sudo container install",
   "extensions": [
-    "github.vscode-pull-request-github",
-    "eamodio.gitlens",
+    "esbenp.prettier-vscode",
+    "rvest.vs-code-prettier-eslint",
     "dbaeumer.vscode-eslint",
+    "yzhang.markdown-all-in-one",
     "redhat.vscode-yaml",
-    "yzhang.markdown-all-in-one"
+    "VisualStudioExptTeam.vscodeintellicode",
+    "VisualStudioExptTeam.intellicode-api-usage-examples",
+    "bierner.lit-html",
+    "runem.lit-plugin"
   ],
   "settings": {
     "files.eol": "\n",
     "editor.tabSize": 2,
-    "terminal.integrated.shell.linux": "/bin/bash",
+    "terminal.integrated.shell.*": "/bin/bash",
     "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
     "editor.formatOnType": true,

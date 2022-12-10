@@ -31,6 +31,10 @@ const plugins = [
   dev && serve(serveopts),
   !dev &&
     terser({
+      compress: {
+        // drop_console: true,
+        pure_funcs: ["console.log"],
+      },
       format: {
         comments: false,
       },
@@ -41,7 +45,7 @@ const plugins = [
 ];
 
 export default {
-  input: "src/basic-card.ts",
+  input: "src/lighteffect-card.ts",
   output: {
     dir: "dist",
     sourcemap: dev ? true : false,
