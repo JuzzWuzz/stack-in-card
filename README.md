@@ -1,8 +1,8 @@
-# LightEffect-Card by JuzzWuzz <!-- omit in toc -->
+# Stack-In-Card by JuzzWuzz <!-- omit in toc -->
 
 A basic card that provided a dropdown populated with the effect list of the supplied light entity.
 
-![all](examples/lighteffect-card.jpg)
+![all](examples/stack-in-card.jpg)
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -13,24 +13,23 @@ A basic card that provided a dropdown populated with the effect list of the supp
 
 ## Configuration
 
-| Name                 | Type    | Default      | Supported options         | Description                                                |
-| -------------------- | ------- | ------------ | ------------------------- | ---------------------------------------------------------- |
-| `type`               | string  | **Required** | `custom:lighteffect-card` | Type of the card                                           |
-| `entity`             | string  | **Required** | `light.bed_light`         | entity_id                                                  |
-| `title`              | string  | optional     | Any string that you want  | The title to show for the card                             |
-| `hide_if_off`        | boolean | `false`      | `true` \| `false`         | If the card must be hidden when the light's state is `off` |
-| `hide_if_no_effects` | boolean | `false`      | `true` \| `false`         | If the card must be hidden when the light has no effects   |
+| Name                 | Type    | Default      | Supported options        | Description                                                |
+| -------------------- | ------- | ------------ | ------------------------ | ---------------------------------------------------------- |
+| `type`               | string  | **Required** | `custom:stack-in-card`   | Type of the card                                           |
+| `title`              | string  | optional     | Any string that you want | The title to show for the card                             |
+| `hide_if_off`        | boolean | `false`      | `true` \| `false`        | If the card must be hidden when the light's state is `off` |
+| `hide_if_no_effects` | boolean | `false`      | `true` \| `false`        | If the card must be hidden when the light has no effects   |
 
 ## Installation
 
-1. Download the [lighteffect-card](https://github.com/JuzzWuzz/lighteffect-card/releases/latest/download/lighteffect-card.js)
+1. Download the [stack-in-card](https://github.com/JuzzWuzz/stack-in-card/releases/latest/download/stack-in-card.js)
 2. Place the file in your `config/www` folder
 3. Include the card code in your `ui-lovelace-card.yaml`
 
    ```yaml
    title: Home
    resources:
-     - url: /local/lighteffect-card.js
+     - url: /local/stack-in-card.js
        type: module
    ```
 
@@ -44,24 +43,6 @@ Show the card even if the light is `off` or has no effects.
 - type: custom:lighteffect-card
   entity: light.bed_light
   title: "Always visible"
-```
-
-Hide the card when the light is `off`
-
-```yaml
-- type: custom:lighteffect-card
-  entity: light.bed_light
-  title: "Hide if off"
-  hide_if_off: true
-```
-
-Hide the card when there are no effects for the light
-
-```yaml
-- type: custom:lighteffect-card
-  entity: light.bed_light
-  title: "Hide if no effects"
-  hide_if_no_effects: true
 ```
 
 ## Development

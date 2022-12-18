@@ -1,8 +1,8 @@
 {
-  "name": "lighteffect-card",
+  "name": "stack-in-card",
   "version": "0.5.0",
   "description": "",
-  "main": "src/lighteffect-card.ts",
+  "main": "src/stack-in-card.ts",
   "scripts": {
     "build": "rimraf dist && npm run rollup",
     "release": "rimraf dist && npm run format && npm run lint && npm run rollup",
@@ -40,7 +40,6 @@
   "dependencies": {
     "custom-card-helpers": "^1.9.0",
     "home-assistant-js-websocket": "^8.0.1",
-    "lit": "^2.3.1",
-    "moment": "^2.29.4"
+    "lit": "^2.3.1"
   }
 }

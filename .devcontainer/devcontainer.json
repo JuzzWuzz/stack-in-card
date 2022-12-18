@@ -1,5 +1,5 @@
 {
-  "name": "Light Effect Card Development",
+  "name": "Stack In Card Development",
   "image": "ghcr.io/ludeeus/devcontainer/generic:latest",
   "context": "..",
   "appPort": [

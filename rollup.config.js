@@ -45,7 +45,7 @@ const plugins = [
 ];
 
 export default {
-  input: "src/lighteffect-card.ts",
+  input: "src/stack-in-card.ts",
   output: {
     dir: "dist",
     sourcemap: dev ? true : false,

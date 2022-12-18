@@ -1,14 +1,9 @@
-export interface LightEffectCardConfig {
-  type: string;
-  entity: string;
-  title?: string;
-  hide_if_off: boolean;
-  hide_if_no_effects: boolean;
-}
+import { LovelaceCardConfig } from "./juzz-ha-helper";
 
-export interface ExternalLightEffectCardConfig {
-  entity: string;
+export interface StackInCardConfig extends LovelaceCardConfig {
+  entity?: string;
   title?: string;
-  hide_if_off: boolean;
-  hide_if_no_effects: boolean;
+  horizontal: boolean;
+  setStyles: boolean;
+  cards: LovelaceCardConfig[];
 }

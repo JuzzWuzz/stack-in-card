@@ -1,20 +1,73 @@
 views:
   - cards:
-      - type: entity
-        entity: light.bed_light
-      - type: vertical-stack
+      - type: custom:stack-in-card
+        title: Vertical Stack In Card
         cards:
-          - type: custom:lighteffect-card
-            entity: light.bed_light
-            title: "Always visible"
-          - type: custom:lighteffect-card
-            entity: light.bed_light
-            title: "Hide if off"
-            hide_if_off: true
-          - type: custom:lighteffect-card
-            entity: light.ceiling_lights
-            title: "Always visible with no effects"
-          - type: custom:lighteffect-card
-            entity: light.ceiling_lights
-            title: "Hide if no effects"
-            hide_if_no_effects: true
+          - type: entities
+            title: "Entities"
+            entities:
+              - light.bed_light
+              - light.ceiling_lights
+          - type: custom:stack-in-card
+            title: Horizontal Stack In Card
+            horizontal: true
+            cards:
+              - type: button
+                entity: light.bed_light
+              - type: button
+                entity: light.ceiling_lights
+              - type: button
+                entity: light.bed_light
+              - type: button
+                entity: light.ceiling_lights
+      # - type: custom:stack-in-card
+      #   title: Horizontal Stack In Card
+      #   horizontal: true
+      #   cards:
+      #     - type: button
+      #       entity: light.bed_light
+      #     - type: button
+      #       entity: light.ceiling_lights
+      # - type: custom:vertical-stack-in-card
+      #   title: Vertical Stack In Card
+      #   cards:
+      #     - type: entities
+      #       title: "Entities"
+      #       entities:
+      #         - light.bed_light
+      #         - light.ceiling_lights
+      #     - type: custom:stack-in-card
+      #       title: Horizontal Stack In Card
+      #       horizontal: true
+      #       cards:
+      #         - type: button
+      #           entity: light.bed_light
+      #         - type: button
+      #           entity: light.ceiling_lights
+      #         - type: button
+      #           entity: light.bed_light
+      #         - type: button
+      #           entity: light.ceiling_lights
+      # - type: custom:vertical-stack-in-card
+      #   title: Horizontal Stack In Card
+      #   horizontal: true
+      #   cards:
+      #     - type: button
+      #       entity: light.bed_light
+      #     - type: button
+      #       entity: light.ceiling_lights
+      # # - type: vertical-stack
+      # #   title: Vertical Stack
+      # #   cards:
+      # #     - type: entities
+      # #       title: "Entities"
+      # #       entities:
+      # #         - light.bed_light
+      # #         - light.ceiling_lights
+      # # - type: horizontal-stack
+      # #   title: Horizontal Stack
+      # #   cards:
+      # #     - type: button
+      # #       entity: light.bed_light
+      # #     - type: button
+      # #       entity: light.ceiling_lights
