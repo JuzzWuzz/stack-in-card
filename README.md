@@ -1,8 +1,22 @@
 # Stack-In-Card by JuzzWuzz <!-- omit in toc -->
 
-A basic card that provided a dropdown populated with the effect list of the supplied light entity.
+Allows you to group multiple cards into either a horizontal or vertical space in the same column.
 
-![all](examples/stack-in-card.jpg)
+<hr>
+
+The horizontal layout
+
+![combo](examples/horizontal.png)
+
+The vertical layout
+
+![combo](examples/vertical.png)
+
+You can combine the card in itself to create a combination card
+
+![combo](examples/combo.png)
+
+<hr>
 
 ## Table of Contents <!-- omit in toc -->
 
@@ -13,12 +27,12 @@ A basic card that provided a dropdown populated with the effect list of the supp
 
 ## Configuration
 
-| Name                 | Type    | Default      | Supported options        | Description                                                |
-| -------------------- | ------- | ------------ | ------------------------ | ---------------------------------------------------------- |
-| `type`               | string  | **Required** | `custom:stack-in-card`   | Type of the card                                           |
-| `title`              | string  | optional     | Any string that you want | The title to show for the card                             |
-| `hide_if_off`        | boolean | `false`      | `true` \| `false`        | If the card must be hidden when the light's state is `off` |
-| `hide_if_no_effects` | boolean | `false`      | `true` \| `false`        | If the card must be hidden when the light has no effects   |
+| Name         | Type    | Default      | Supported options        | Description                                                      |
+| ------------ | ------- | ------------ | ------------------------ | ---------------------------------------------------------------- |
+| `type`       | string  | **Required** | `custom:stack-in-card`   | Type of the card                                                 |
+| `title`      | string  | optional     | Any string that you want | The title to show for the card                                   |
+| `horizontal` | boolean | `false`      | `true` \| `false`        | Layout for the cards provided. Either horizontally or vertically |
+| `cards`      | array   | **Required** |                          | An array of all the cards you want                               |
 
 ## Installation
 
@@ -37,12 +51,31 @@ A basic card that provided a dropdown populated with the effect list of the supp
 
 ## Examples
 
-Show the card even if the light is `off` or has no effects.
+The code snippet below is what was used to generate the combination card shown above
 
 ```yaml
-- type: custom:lighteffect-card
-  entity: light.bed_light
-  title: "Always visible"
+- type: custom:stack-in-card
+  title: Vertical Stack In Card
+  cards:
+    - type: entities
+      title: "Entities"
+      entities:
+        - light.bed_light
+        - light.ceiling_lights
+        - light.kitchen_lights
+        - light.office_rgbw_lights
+    - type: custom:stack-in-card
+      title: Horizontal Stack In Card
+      horizontal: true
+      cards:
+        - type: button
+          entity: light.bed_light
+        - type: button
+          entity: light.ceiling_lights
+        - type: button
+          entity: light.kitchen_lights
+        - type: button
+          entity: light.office_rgbw_lights
 ```
 
 ## Development
