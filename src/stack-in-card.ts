@@ -134,14 +134,15 @@ class StackInCard extends LitElement implements LovelaceCard {
       return html``;
     }
 
-    const rootStyle = this._config.horizontal
+    const cardId = this._config.horizontal
       ? "stack-in-horizontal"
       : "stack-in-vertical";
-    const extraClass = !this._config.title ? "top-padding" : undefined;
+    const classes = ["bottom-padding"];
+    if (!this._config.title) {
+      classes.push("top-padding");
+    }
     const cardHTML = this._cards
-      ? html`<div id=${rootStyle} class=${ifDefined(extraClass)}>
-          ${this._cards}
-        </div>`
+      ? html`<div id=${cardId} class=${classes.join(" ")}>${this._cards}</div>`
       : html``;
 
     try {
@@ -168,25 +169,49 @@ class StackInCard extends LitElement implements LovelaceCard {
     const _loopChildNodes = (element: LovelaceCard | undefined) => {
       if (!element) return;
       element.childNodes.forEach((child) => {
+        console.log((child as Element).tagName);
         if ((child as LovelaceCard).style) {
           (child as LovelaceCard).style.margin = "0px";
         }
         this.styleCard(child as LovelaceCard);
       });
     };
-    const _tryStyleHACard = (maybeHACard: HTMLElement | null): boolean => {
+    const _tryStyleHACard = (
+      maybeHACard: HTMLElement | null,
+      isStackInCard: boolean,
+    ): boolean => {
       if (maybeHACard) {
         maybeHACard.style.boxShadow = "none";
         maybeHACard.style.borderRadius = "0";
         maybeHACard.style.border = "none";
+        if (isStackInCard) {
+          maybeHACard.childNodes.forEach((child) => {
+            if (
+              [
+                "stack-in-horizontal",
+                "stack-in-vertical",
+              ].includes((child as Element).id)
+            ) {
+              const contents = child as LitElement;
+              contents.classList.remove("top-padding");
+              contents.classList.remove("bottom-padding");
+            }
+          });
+        }
         return true;
       }
       return false;
     };
     const _styleCard = (element: LovelaceCard | undefined) => {
       if (!element) return;
+      const isStackInCard = element.tagName === "STACK-IN-CARD";
       if (element.shadowRoot) {
-        if (!_tryStyleHACard(element.shadowRoot.querySelector("ha-card"))) {
+        if (
+          !_tryStyleHACard(
+            element.shadowRoot.querySelector("ha-card"),
+            isStackInCard,
+          )
+        ) {
           const otherElements =
             element.shadowRoot.getElementById("root") ||
             element.shadowRoot.getElementById("card");
@@ -194,7 +219,7 @@ class StackInCard extends LitElement implements LovelaceCard {
         }
       } else {
         if (typeof element.querySelector === "function") {
-          _tryStyleHACard(element.querySelector("ha-card"));
+          _tryStyleHACard(element.querySelector("ha-card"), isStackInCard);
         }
         _loopChildNodes(element);
       }
@@ -216,7 +241,6 @@ class StackInCard extends LitElement implements LovelaceCard {
     #stack-in-horizontal {
       display: flex;
       height: 100%;
-      padding-bottom: var(--ha-card-border-radius, 12px);
     }
     #stack-in-horizontal > * {
       flex: 1 1 0;
@@ -227,13 +251,15 @@ class StackInCard extends LitElement implements LovelaceCard {
       display: flex;
       flex-direction: column;
       height: 100%;
-      padding-bottom: var(--ha-card-border-radius, 12px);
     }
     #stack-in-vertical > * {
       margin: 0px;
     }
     .top-padding {
-      padding-top: 12px;
+      padding-top: var(--ha-card-border-radius, 12px);
+    }
+    .bottom-padding {
+      padding-bottom: var(--ha-card-border-radius, 12px);
     }
   `;
 

@@ -1,6 +1,6 @@
 {
   "name": "stack-in-card",
-  "version": "0.5.0",
+  "version": "0.5.5",
   "description": "",
   "main": "src/stack-in-card.ts",
   "scripts": {
