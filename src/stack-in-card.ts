@@ -8,6 +8,7 @@ import {
   LovelaceCardConfig,
   computeCardSize,
   createCardElement,
+  SPECIAL_TYPES,
 } from "./juzz-ha-helper";
 import * as pjson from "../package.json";
 
@@ -36,16 +37,20 @@ class StackInCard extends LitElement implements LovelaceCard {
 
   @state() private _config?: StackInCardConfig;
 
-  @property() protected _cards?;
+  @property() protected _cards?: LovelaceCard[];
 
   private _initialSetupComplete = false;
+
+  private _specialCards = new Set(
+    Array.from(SPECIAL_TYPES).map((tag) => `hui-${tag}-row`.toUpperCase()),
+  );
 
   /**
    * Invoked when the component is added to the document's DOM.
    */
   public connectedCallback(): void {
     super.connectedCallback();
-    console.log("connectedCallback()");
+    // console.log("connectedCallback()");
 
     // Init the card
     if (this._config && !this._initialSetupComplete) {
@@ -58,7 +63,7 @@ class StackInCard extends LitElement implements LovelaceCard {
    */
   public disconnectedCallback(): void {
     super.disconnectedCallback();
-    console.log("disconnectedCallback()");
+    // console.log("disconnectedCallback()");
   }
 
   /**
@@ -73,7 +78,7 @@ class StackInCard extends LitElement implements LovelaceCard {
    * Sets the config for the card
    */
   public setConfig(config: StackInCardConfig) {
-    console.log("setConfig()");
+    // console.log("setConfig()");
 
     try {
       if (!config.cards || !Array.isArray(config.cards)) {
@@ -83,14 +88,25 @@ class StackInCard extends LitElement implements LovelaceCard {
         ...{
           type: "custom:stack-in-card",
           horizontal: false,
-          setStyles: false,
+          // eslint-disable-next-line camelcase
+          disable_padding: false,
         },
         ...config,
       };
 
-      this._cards = config.cards.map((cardConfig) =>
-        this._createCardElement(cardConfig),
-      );
+      this._cards = config.cards.map((cardConfig) => {
+        // Disable padding for embedded cards as default
+        if (cardConfig.type === config.type) {
+          return this._createCardElement({
+            ...{
+              // eslint-disable-next-line camelcase
+              disable_padding: true,
+            },
+            ...cardConfig,
+          });
+        }
+        return this._createCardElement(cardConfig);
+      });
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
@@ -103,7 +119,7 @@ class StackInCard extends LitElement implements LovelaceCard {
    */
   protected willUpdate(changedProps: PropertyValues): void {
     super.willUpdate(changedProps);
-    console.log("willUpdate()");
+    // console.log("willUpdate()");
 
     if (changedProps.has("_hass") && this._cards?.length) {
       this._cards.forEach((card) => (card.hass = this._hass));
@@ -115,14 +131,20 @@ class StackInCard extends LitElement implements LovelaceCard {
    */
   protected updated(changedProps: PropertyValues) {
     super.updated(changedProps);
-    console.log("updated()");
+    // console.log("updated()");
 
     // Bail if we have an invalid state
     if (!this._config || !this._hass || !this._cards) {
       return;
     }
     for (const element of this._cards) {
-      this.styleCard(element);
+      // The special row tyles need padding else they bug out
+      if (this._specialCards.has(element.tagName)) {
+        (element as LovelaceCard).style.paddingLeft = "16px";
+        (element as LovelaceCard).style.paddingRight = "16px";
+      } else {
+        this.styleCard(element);
+      }
     }
   }
 
@@ -140,6 +162,9 @@ class StackInCard extends LitElement implements LovelaceCard {
     const classes = ["bottom-padding"];
     if (!this._config.title) {
       classes.push("top-padding");
+    }
+    if (this._config.disable_padding) {
+      classes.length = 0;
     }
     const cardHTML = this._cards
       ? html`<div id=${cardId} class=${classes.join(" ")}>${this._cards}</div>`
@@ -169,49 +194,25 @@ class StackInCard extends LitElement implements LovelaceCard {
     const _loopChildNodes = (element: LovelaceCard | undefined) => {
       if (!element) return;
       element.childNodes.forEach((child) => {
-        console.log((child as Element).tagName);
         if ((child as LovelaceCard).style) {
           (child as LovelaceCard).style.margin = "0px";
         }
         this.styleCard(child as LovelaceCard);
       });
     };
-    const _tryStyleHACard = (
-      maybeHACard: HTMLElement | null,
-      isStackInCard: boolean,
-    ): boolean => {
+    const _tryStyleHACard = (maybeHACard: HTMLElement | null): boolean => {
       if (maybeHACard) {
         maybeHACard.style.boxShadow = "none";
         maybeHACard.style.borderRadius = "0";
         maybeHACard.style.border = "none";
-        if (isStackInCard) {
-          maybeHACard.childNodes.forEach((child) => {
-            if (
-              [
-                "stack-in-horizontal",
-                "stack-in-vertical",
-              ].includes((child as Element).id)
-            ) {
-              const contents = child as LitElement;
-              contents.classList.remove("top-padding");
-              contents.classList.remove("bottom-padding");
-            }
-          });
-        }
         return true;
       }
       return false;
     };
     const _styleCard = (element: LovelaceCard | undefined) => {
       if (!element) return;
-      const isStackInCard = element.tagName === "STACK-IN-CARD";
       if (element.shadowRoot) {
-        if (
-          !_tryStyleHACard(
-            element.shadowRoot.querySelector("ha-card"),
-            isStackInCard,
-          )
-        ) {
+        if (!_tryStyleHACard(element.shadowRoot.querySelector("ha-card"))) {
           const otherElements =
             element.shadowRoot.getElementById("root") ||
             element.shadowRoot.getElementById("card");
@@ -219,7 +220,7 @@ class StackInCard extends LitElement implements LovelaceCard {
         }
       } else {
         if (typeof element.querySelector === "function") {
-          _tryStyleHACard(element.querySelector("ha-card"), isStackInCard);
+          _tryStyleHACard(element.querySelector("ha-card"));
         }
         _loopChildNodes(element);
       }

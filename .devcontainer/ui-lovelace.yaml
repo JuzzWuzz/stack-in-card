@@ -1,15 +1,18 @@
 views:
   - cards:
+      - type: entities
+        title: "Entities"
+        entities:
+          - light.bed_light
+          - type: divider
+          - type: section
+            label: lols
+          - light.ceiling_lights
+          - light.kitchen_lights
+          - light.office_rgbw_lights
       - type: custom:stack-in-card
         title: Vertical Stack In Card
         cards:
-          # - type: entities
-          #   title: "Entities"
-          #   entities:
-          #     - light.bed_light
-          #     - light.ceiling_lights
-          #     - light.kitchen_lights
-          #     - light.office_rgbw_lights
           - type: custom:stack-in-card
             horizontal: true
             cards:
@@ -21,6 +24,9 @@ views:
                 entity: light.kitchen_lights
               - type: button
                 entity: light.office_rgbw_lights
+          - type: divider
+          - type: section
+            label: lols
           - type: custom:stack-in-card
             horizontal: true
             cards:
@@ -32,6 +38,7 @@ views:
                 entity: light.kitchen_lights
               - type: button
                 entity: light.office_rgbw_lights
+          - type: divider
           - type: custom:stack-in-card
             horizontal: true
             cards:
@@ -43,6 +50,10 @@ views:
                 entity: light.kitchen_lights
               - type: button
                 entity: light.office_rgbw_lights
+
+      # ####################
+      # No Headings
+      # ####################
       - type: custom:stack-in-card
         title: Vertical Stack In Card
         cards:
@@ -65,6 +76,10 @@ views:
             entity: light.kitchen_lights
           - type: button
             entity: light.office_rgbw_lights
+
+      # ####################
+      # No Headings
+      # ####################
       - type: custom:stack-in-card
         cards:
           - type: entities

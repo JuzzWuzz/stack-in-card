@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Polymer legacy event helpers used courtesy of the Polymer project.
 //
@@ -66,6 +67,7 @@ export const fireEvent = <HassEvent extends ValidHassDomEvent>(
   },
 ) => {
   options = options || {};
+  // @ts-ignore
   detail = detail === null || detail === undefined ? {} : detail;
   const event = new Event(type, {
     bubbles: options.bubbles === undefined ? true : options.bubbles,

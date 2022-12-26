@@ -27,12 +27,13 @@ You can combine the card in itself to create a combination card
 
 ## Configuration
 
-| Name         | Type    | Default      | Supported options        | Description                                                      |
-| ------------ | ------- | ------------ | ------------------------ | ---------------------------------------------------------------- |
-| `type`       | string  | **Required** | `custom:stack-in-card`   | Type of the card                                                 |
-| `title`      | string  | optional     | Any string that you want | The title to show for the card                                   |
-| `horizontal` | boolean | `false`      | `true` \| `false`        | Layout for the cards provided. Either horizontally or vertically |
-| `cards`      | array   | **Required** |                          | An array of all the cards you want                               |
+| Name              | Type    | Default      | Supported options        | Description                                                                                                              |
+| ----------------- | ------- | ------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `type`            | string  | **Required** | `custom:stack-in-card`   | Type of the card                                                                                                         |
+| `title`           | string  | optional     | Any string that you want | The title to show for the card                                                                                           |
+| `horizontal`      | boolean | `false`      | `true` \| `false`        | Layout for the cards provided. Either horizontally or vertically                                                         |
+| `disable_padding` | boolean | `false`      | `true` \| `false`        | Allows for disabling the top and bottom padding. Nested cards will automatically disable padding, which you can override |
+| `cards`           | array   | **Required** |                          | An array of all the cards you want                                                                                       |
 
 ## Installation
 
