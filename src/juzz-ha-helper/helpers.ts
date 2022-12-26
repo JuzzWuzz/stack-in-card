@@ -25,26 +25,86 @@ export const computeCardSize = (
 // Section: Creating Cards
 // ########################################
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const HELPERS = (window as any).loadCardHelpers
-  ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (window as any).loadCardHelpers()
-  : undefined;
+export class CardHelper {
+  private static instance: CardHelper;
+  private _helpers;
+  private _helpersPromise;
 
-export const SPECIAL_TYPES = new Set([
-  "divider",
-  "section",
-  "text",
-  "weblink",
-]);
+  /**
+   * Init functions
+   */
 
-/**
- * Ability to create a custom element
- */
-export const createCardElement = (cardConfig: LovelaceCardConfig) => {
-  const _createError = (error, origConfig) => {
-    return _createElement(
-      "hui-error-card",
+  private constructor() {
+    this.loadHelpersPromise();
+  }
+  private async loadHelpersPromise() {
+    this._helpersPromise = this.loadHelpers();
+    this._helpers = await this._helpersPromise;
+  }
+  private async loadHelpers() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if ((window as any).loadCardHelpers) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return await (window as any).loadCardHelpers();
+    } else {
+      return undefined;
+    }
+  }
+
+  /**
+   * Public Accessors
+   */
+
+  public static async getInstance() {
+    if (!CardHelper.instance) {
+      CardHelper.instance = new CardHelper();
+    }
+
+    await CardHelper.instance._helpersPromise;
+
+    return CardHelper.instance;
+  }
+
+  /**
+   * List of special types that should render row types
+   */
+  public static SPECIAL_TYPES = new Set([
+    "divider",
+    "section",
+    "text",
+    "weblink",
+  ]);
+
+  /**
+   * Create a element
+   */
+  public createElement(cardConfig: LovelaceCardConfig) {
+    const isCustom = cardConfig.type.startsWith("custom:");
+    const isRow = CardHelper.SPECIAL_TYPES.has(cardConfig.type);
+
+    /**
+     * This should always use the HA helpers but its been built out in the worst case event
+     */
+    if (this._helpers) {
+      if (isRow) {
+        return this._helpers.createRowElement(cardConfig);
+      } else {
+        return this._helpers.createCardElement(cardConfig);
+      }
+    } else {
+      return this._createElement(cardConfig, isCustom, isRow);
+    }
+  }
+
+  /**
+   * Private functions
+   */
+
+  /**
+   * Create an error card for when things go wrong
+   */
+  private _createError(error, origConfig) {
+    return this._createElement(
       {
         type: "error",
         error,
@@ -53,26 +113,47 @@ export const createCardElement = (cardConfig: LovelaceCardConfig) => {
       false,
       false,
     );
-  };
-  const _createElement = (tag, config, isCustom: boolean, isRow: boolean) => {
-    if (!cardConfig || typeof cardConfig !== "object" || !cardConfig.type) {
-      return _createError("No type defined", cardConfig);
+  }
+
+  /**
+   * Creates an element, this can be a row or card entity depending on the config
+   * This system supports a limited set of special types
+   */
+  private _createElement(config, isCustom: boolean, isRow: boolean) {
+    if (!config || typeof config !== "object" || !config.type) {
+      return this._createError("No type defined", config);
     }
+    console.log(`${config.type} -- ${isCustom} -- ${isRow}`);
+
+    const cardType = config.type;
+    const tag = (() => {
+      if (isCustom) {
+        return cardType.substring("custom:".length);
+      } else {
+        if (isRow) {
+          return `hui-${cardType}-row`;
+        } else {
+          return `hui-${cardType}-card`;
+        }
+      }
+    })();
+    console.log(tag);
+
     if (customElements.get(tag)) {
       const element = document.createElement(tag);
       try {
         element.setConfig(config);
       } catch (err) {
-        if (tag === "hui-error-card") {
+        if (cardType === "error") {
           return element;
         } else {
           console.error(tag, err);
-          return _createError(err.message, config);
+          return this._createError(err.message, config);
         }
       }
       return element;
     } else {
-      const element = _createError(
+      const element = this._createError(
         `Custom element doesn't exist: ${tag}.`,
         config,
       );
@@ -86,14 +167,12 @@ export const createCardElement = (cardConfig: LovelaceCardConfig) => {
       }, 2000);
 
       // If this is not a custom element lets try get it loaded by creating a fake item
-      if (!isCustom && HELPERS) {
-        HELPERS.then((helpers) => {
-          if (isRow) {
-            helpers.createRowElement({ type: cardConfig.type });
-          } else {
-            helpers.createCardElement({ type: cardConfig.type });
-          }
-        });
+      if (!isCustom && this._helpers) {
+        if (isRow) {
+          this._helpers.createRowElement({ type: config.type });
+        } else {
+          this._helpers.createCardElement({ type: config.type });
+        }
       }
 
       // Remove error if element is defined later
@@ -106,22 +185,5 @@ export const createCardElement = (cardConfig: LovelaceCardConfig) => {
 
       return element;
     }
-  };
-
-  let tag = cardConfig.type;
-  let isCustom = false;
-  let isRow = false;
-  if (tag.startsWith("custom:")) {
-    tag = tag.substring("custom:".length);
-    isCustom = true;
-  } else {
-    if (SPECIAL_TYPES.has(tag)) {
-      tag = `hui-${tag}-row`;
-      isRow = true;
-    } else {
-      tag = `hui-${tag}-card`;
-    }
   }
-
-  return _createElement(tag, cardConfig, isCustom, isRow);
-};
+}

@@ -7,8 +7,7 @@ import {
   LovelaceCard,
   LovelaceCardConfig,
   computeCardSize,
-  createCardElement,
-  SPECIAL_TYPES,
+  CardHelper,
 } from "./juzz-ha-helper";
 import * as pjson from "../package.json";
 
@@ -38,33 +37,7 @@ class StackInCard extends LitElement implements LovelaceCard {
   @state() private _config?: StackInCardConfig;
 
   @property() protected _cards?: LovelaceCard[];
-
-  private _initialSetupComplete = false;
-
-  private _specialCards = new Set(
-    Array.from(SPECIAL_TYPES).map((tag) => `hui-${tag}-row`.toUpperCase()),
-  );
-
-  /**
-   * Invoked when the component is added to the document's DOM.
-   */
-  public connectedCallback(): void {
-    super.connectedCallback();
-    // console.log("connectedCallback()");
-
-    // Init the card
-    if (this._config && !this._initialSetupComplete) {
-      this._initialSetupComplete = true;
-    }
-  }
-
-  /**
-   * Invoked when the component is removed from the document's DOM.
-   */
-  public disconnectedCallback(): void {
-    super.disconnectedCallback();
-    // console.log("disconnectedCallback()");
-  }
+  private _cardsPromise?: Promise<LovelaceCard[]>;
 
   /**
    * Called whenever the HASS object changes
@@ -94,24 +67,60 @@ class StackInCard extends LitElement implements LovelaceCard {
         ...config,
       };
 
-      this._cards = config.cards.map((cardConfig) => {
-        // Disable padding for embedded cards as default
-        if (cardConfig.type === config.type) {
-          return this._createCardElement({
-            ...{
-              // eslint-disable-next-line camelcase
-              disable_padding: true,
-            },
-            ...cardConfig,
-          });
-        }
-        return this._createCardElement(cardConfig);
-      });
+      // Init all the cards
+      this.initCards(this._config);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(`/// STACK-IN-CARD Invalid Config ///${e.message}`);
     }
+  }
+
+  /**
+   * Init the Cards by getting the promise for the cards and awaiting it
+   * Once its fulfilled, set the cards property
+   */
+  private async initCards(config: StackInCardConfig): Promise<void> {
+    this._cardsPromise = this.initCardsPromise(config);
+    this._cards = await this._cardsPromise;
+  }
+
+  /**
+   * Return a promise of the array of cards
+   */
+  private async initCardsPromise(
+    config: StackInCardConfig,
+  ): Promise<LovelaceCard[]> {
+    const cardPromises = config.cards.map(async (cardConfig) => {
+      // Disable padding for embedded cards as default
+      const updatedConfig = (() => {
+        if (cardConfig.type === config.type) {
+          return {
+            // eslint-disable-next-line camelcase
+            ...{ disable_padding: true },
+            ...cardConfig,
+          };
+        } else {
+          return cardConfig;
+        }
+      })();
+
+      // Create the card element
+      const card = await this._createCardElement(updatedConfig);
+
+      // The special row styles need padding else they bug out
+      if (CardHelper.SPECIAL_TYPES.has(updatedConfig.type)) {
+        card.style.paddingLeft = "16px";
+        card.style.paddingRight = "16px";
+      } else {
+        this.styleCard(card);
+      }
+
+      // Return the styled card
+      return card;
+    });
+
+    return Promise.all(cardPromises);
   }
 
   /**
@@ -123,28 +132,6 @@ class StackInCard extends LitElement implements LovelaceCard {
 
     if (changedProps.has("_hass") && this._cards?.length) {
       this._cards.forEach((card) => (card.hass = this._hass));
-    }
-  }
-
-  /**
-   * Called whenever the component’s update finishes and the element's DOM has been updated and rendered.
-   */
-  protected updated(changedProps: PropertyValues) {
-    super.updated(changedProps);
-    // console.log("updated()");
-
-    // Bail if we have an invalid state
-    if (!this._config || !this._hass || !this._cards) {
-      return;
-    }
-    for (const element of this._cards) {
-      // The special row tyles need padding else they bug out
-      if (this._specialCards.has(element.tagName)) {
-        (element as LovelaceCard).style.paddingLeft = "16px";
-        (element as LovelaceCard).style.paddingRight = "16px";
-      } else {
-        this.styleCard(element);
-      }
     }
   }
 
@@ -268,24 +255,38 @@ class StackInCard extends LitElement implements LovelaceCard {
    * Get the size of the card based on the size of the cards it holds
    */
   public async getCardSize() {
-    if (!this._config || !this._cards) {
+    if (!this._config || !this._cardsPromise) {
       return 0;
     }
 
+    await this._cardsPromise;
+    if (!this._cards) {
+      return 0;
+    }
+
+    let x = 0;
+
     const sizes = await Promise.all(this._cards.map(computeCardSize));
     if (this._config.horizontal) {
-      return Math.max(...sizes);
+      x = Math.max(...sizes);
     } else {
-      return sizes.reduce((partialSum, a) => partialSum + a, 0);
+      x = sizes.reduce((partialSum, a) => partialSum + a, 0);
     }
+    console.log(`Size: ${x}`);
+    return x;
   }
 
   /**
    * Create a card element
    */
-  private _createCardElement(cardConfig: LovelaceCardConfig) {
-    const element = createCardElement(cardConfig);
-    element.hass = this._hass;
+  private async _createCardElement(
+    cardConfig: LovelaceCardConfig,
+  ): Promise<LovelaceCard> {
+    const cardHelper = await CardHelper.getInstance();
+    const element = cardHelper.createElement(cardConfig);
+    if (this._hass) {
+      element.hass = this._hass;
+    }
     element.addEventListener(
       "ll-rebuild",
       (ev) => {
@@ -300,11 +301,11 @@ class StackInCard extends LitElement implements LovelaceCard {
   /**
    * Rebuild the card
    */
-  private _rebuildCard(
+  private async _rebuildCard(
     cardToReplace: LovelaceCard,
     config: LovelaceCardConfig,
-  ): void {
-    const newCard = this._createCardElement(config);
+  ): Promise<void> {
+    const newCard = await this._createCardElement(config);
     if (cardToReplace.parentElement) {
       cardToReplace.parentElement.replaceChild(newCard, cardToReplace);
     }
