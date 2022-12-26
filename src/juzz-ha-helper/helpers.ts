@@ -123,7 +123,6 @@ export class CardHelper {
     if (!config || typeof config !== "object" || !config.type) {
       return this._createError("No type defined", config);
     }
-    console.log(`${config.type} -- ${isCustom} -- ${isRow}`);
 
     const cardType = config.type;
     const tag = (() => {
@@ -137,7 +136,6 @@ export class CardHelper {
         }
       }
     })();
-    console.log(tag);
 
     if (customElements.get(tag)) {
       const element = document.createElement(tag);

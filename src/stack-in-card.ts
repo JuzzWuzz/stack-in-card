@@ -68,7 +68,7 @@ class StackInCard extends LitElement implements LovelaceCard {
       };
 
       // Init all the cards
-      this.initCards(this._config);
+      this.initCardsPromise(this._config);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
@@ -80,17 +80,15 @@ class StackInCard extends LitElement implements LovelaceCard {
    * Init the Cards by getting the promise for the cards and awaiting it
    * Once its fulfilled, set the cards property
    */
-  private async initCards(config: StackInCardConfig): Promise<void> {
-    this._cardsPromise = this.initCardsPromise(config);
+  private async initCardsPromise(config: StackInCardConfig): Promise<void> {
+    this._cardsPromise = this.initCards(config);
     this._cards = await this._cardsPromise;
   }
 
   /**
    * Return a promise of the array of cards
    */
-  private async initCardsPromise(
-    config: StackInCardConfig,
-  ): Promise<LovelaceCard[]> {
+  private async initCards(config: StackInCardConfig): Promise<LovelaceCard[]> {
     const cardPromises = config.cards.map(async (cardConfig) => {
       // Disable padding for embedded cards as default
       const updatedConfig = (() => {
@@ -255,25 +253,24 @@ class StackInCard extends LitElement implements LovelaceCard {
    * Get the size of the card based on the size of the cards it holds
    */
   public async getCardSize() {
+    // If we haven't loaded config or started the card loading, return 0
     if (!this._config || !this._cardsPromise) {
       return 0;
     }
 
+    // If we've waited for the cards to load but they are not set, return 0
     await this._cardsPromise;
     if (!this._cards) {
       return 0;
     }
 
-    let x = 0;
-
+    // Compute the sizes of the cards
     const sizes = await Promise.all(this._cards.map(computeCardSize));
     if (this._config.horizontal) {
-      x = Math.max(...sizes);
+      return Math.max(...sizes);
     } else {
-      x = sizes.reduce((partialSum, a) => partialSum + a, 0);
+      return sizes.reduce((partialSum, a) => partialSum + a, 0);
     }
-    console.log(`Size: ${x}`);
-    return x;
   }
 
   /**
