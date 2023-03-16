@@ -1,4 +1,4 @@
-import { LovelaceCardConfig } from "./juzz-ha-helper";
+import { LovelaceCardConfig } from "juzz-ha-helper";
 
 export interface StackInCardConfig extends LovelaceCardConfig {
   title?: string;

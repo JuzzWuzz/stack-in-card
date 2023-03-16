@@ -8,7 +8,7 @@ import {
   LovelaceCardConfig,
   computeCardSize,
   CardHelper,
-} from "./juzz-ha-helper";
+} from "juzz-ha-helper";
 import * as pjson from "../package.json";
 
 /* eslint no-console: 0 */
