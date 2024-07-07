@@ -49,6 +49,7 @@ export default {
   output: {
     dir: "dist",
     sourcemap: dev ? true : false,
+    inlineDynamicImports: true,
   },
   plugins: [
     ...plugins,
