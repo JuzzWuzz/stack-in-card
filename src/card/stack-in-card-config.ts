@@ -14,11 +14,12 @@ export type StackInCardConfigStrict = StackInCardConfig & {
   disable_padding: boolean;
 };
 
-export const StackInCardConfigStruct = object({
-  type: string(),
-  view_layout: any(),
-  title: optional(string()),
-  horizontal: optional(boolean()),
-  disable_padding: optional(boolean()),
-  cards: array(any()),
-});
+export const StackInCardConfigStruct = assign(
+  baseLovelaceCardConfig,
+  object({
+    title: optional(string()),
+    horizontal: optional(boolean()),
+    disable_padding: optional(boolean()),
+    cards: array(any()),
+  }),
+);

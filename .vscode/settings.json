@@ -6,5 +6,11 @@
   "editor.formatOnSaveMode": "file", // required to format on save
   "files.autoSave": "onFocusChange", // optional but recommended
   "typescript.suggest.paths": false, // Due to using `Path Intellisense` Extension
-  "javascript.suggest.paths": false // Due to using `Path Intellisense` Extension
+  "javascript.suggest.paths": false, // Due to using `Path Intellisense` Extension
+  "eslint.validate": [
+    "typescript"
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always"
+  }
 }

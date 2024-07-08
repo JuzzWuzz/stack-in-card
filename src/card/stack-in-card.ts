@@ -1,22 +1,23 @@
-import { LitElement, PropertyValues, TemplateResult, css, html } from "lit";
-import { ifDefined } from "lit/directives/if-defined.js";
-import { property, customElement, state } from "lit/decorators.js";
-import { StackInCardConfig, StackInCardConfigStrict } from "./stack-in-card-config";
 import {
+  CardHelper,
   HomeAssistant,
   LovelaceCard,
   LovelaceCardConfig,
   LovelaceCardEditor,
   computeCardSize,
-  CardHelper,
 } from "juzz-ha-helper";
-import { registerCustomCard } from "../utils/custom-cards";
+import { LitElement, PropertyValues, TemplateResult, css, html } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { ifDefined } from "lit/directives/if-defined.js";
+
 import {
   CARD_DEFAULT_DISABLE_PADDING,
   CARD_DEFAULT_HORIZONTAL,
   CARD_EDITOR_NAME,
   CARD_NAME,
 } from "./const";
+import { StackInCardConfig, StackInCardConfigStrict } from "./stack-in-card-config";
+import { registerCustomCard } from "../utils/custom-cards";
 
 registerCustomCard({
   type: CARD_NAME,
@@ -64,7 +65,7 @@ export class StackInCard extends LitElement implements LovelaceCard {
       }
       this._config = {
         ...{
-          type: "custom:stack-in-card",
+          type: `custom:${CARD_NAME}`,
           horizontal: CARD_DEFAULT_HORIZONTAL,
           disable_padding: CARD_DEFAULT_DISABLE_PADDING,
         },
@@ -76,7 +77,7 @@ export class StackInCard extends LitElement implements LovelaceCard {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
-      throw new Error(`/// STACK-IN-CARD Invalid Config ///${e.message}`);
+      throw new Error(`/// ${CARD_NAME.toUpperCase} Invalid Config ///${e.message}`);
     }
   }
 

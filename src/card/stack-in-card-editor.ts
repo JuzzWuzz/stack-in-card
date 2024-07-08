@@ -6,8 +6,6 @@ import {
   mdiListBoxOutline,
   mdiPlus,
 } from "@mdi/js";
-import { CSSResultGroup, LitElement, css, html, nothing } from "lit";
-import { CARD_EDITOR_NAME, CARD_DEFAULT_HORIZONTAL, CARD_DEFAULT_DISABLE_PADDING } from "./const";
 import {
   ConfigChangedEvent,
   EditorTarget,
@@ -19,11 +17,12 @@ import {
   LovelaceConfig,
   fireEvent,
 } from "juzz-ha-helper";
+import { CSSResultGroup, LitElement, TemplateResult, css, html } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
-import { StackInCardConfig, StackInCardConfigStruct } from "./stack-in-card-config";
 import { assert } from "superstruct";
 
-export const configElementStyle = css``;
+import { CARD_DEFAULT_DISABLE_PADDING, CARD_DEFAULT_HORIZONTAL, CARD_EDITOR_NAME } from "./const";
+import { StackInCardConfig, StackInCardConfigStruct } from "./stack-in-card-config";
 
 @customElement(CARD_EDITOR_NAME)
 export class StackInCardEditor extends LitElement implements LovelaceCardEditor {
@@ -58,9 +57,9 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
     this._cardEditorElement?.focusYamlEditor();
   }
 
-  protected render() {
+  protected render(): TemplateResult {
     if (!this._hass || !this._config) {
-      return nothing;
+      return html``;
     }
 
     const selected = this._selectedCard!;
@@ -71,9 +70,7 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
     return html`
       <div class="card-config">
         <ha-textfield
-          .label="${this._hass.localize(
-            "ui.panel.lovelace.editor.card.generic.title",
-          )} (${this._hass.localize("ui.panel.lovelace.editor.card.config.optional")})"
+          .label=${"Title (Optional)"}
           .value=${this._config.title || ""}
           .configValue=${"title"}
           @input=${this._handleConfigChanged}
@@ -284,79 +281,76 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
   }
 
   static get styles(): CSSResultGroup {
-    return [
-      configElementStyle,
-      css`
-        .card-config {
-          /* Cancels overlapping Margins for HAForm + Card Config options */
-          overflow: auto;
-        }
-        ha-formfield {
-          display: flex;
-          height: 56px;
-          align-items: center;
-          --mdc-typography-body2-font-size: 1em;
-        }
-        ha-switch {
-          padding: 16px 6px;
-        }
-        .side-by-side {
-          display: flex;
-          align-items: flex-end;
-        }
-        .side-by-side > * {
-          flex: 1;
-          padding-right: 8px;
-        }
-        .side-by-side > *:last-child {
-          flex: 1;
-          padding-right: 0;
-        }
-        .suffix {
-          margin: 0 8px;
-        }
-        hui-action-editor,
-        ha-select,
-        ha-textfield,
-        ha-icon-picker {
-          margin-top: 8px;
-          display: block;
-        }
-        .toolbar {
-          display: flex;
-          --paper-tabs-selection-bar-color: var(--primary-color);
-          --paper-tab-ink: var(--primary-color);
-        }
-        paper-tabs {
-          display: flex;
-          font-size: 14px;
-          flex-grow: 1;
-        }
-        #add-card {
-          max-width: 32px;
-          padding: 0;
-        }
+    return css`
+      .card-config {
+        /* Cancels overlapping Margins for HAForm + Card Config options */
+        overflow: auto;
+      }
+      ha-formfield {
+        display: flex;
+        height: 56px;
+        align-items: center;
+        --mdc-typography-body2-font-size: 1em;
+      }
+      ha-switch {
+        padding: 16px 6px;
+      }
+      .side-by-side {
+        display: flex;
+        align-items: flex-end;
+      }
+      .side-by-side > * {
+        flex: 1;
+        padding-right: 8px;
+      }
+      .side-by-side > *:last-child {
+        flex: 1;
+        padding-right: 0;
+      }
+      .suffix {
+        margin: 0 8px;
+      }
+      hui-action-editor,
+      ha-select,
+      ha-textfield,
+      ha-icon-picker {
+        margin-top: 8px;
+        display: block;
+      }
+      .toolbar {
+        display: flex;
+        --paper-tabs-selection-bar-color: var(--primary-color);
+        --paper-tab-ink: var(--primary-color);
+      }
+      paper-tabs {
+        display: flex;
+        font-size: 14px;
+        flex-grow: 1;
+      }
+      #add-card {
+        max-width: 32px;
+        padding: 0;
+      }
 
-        #card-options {
-          display: flex;
-          justify-content: flex-end;
-          width: 100%;
-        }
+      #card-options {
+        display: flex;
+        justify-content: flex-end;
+        width: 100%;
+      }
 
+      #editor {
+        border: 1px solid var(--divider-color);
+        padding: 12px;
+      }
+      @media (max-width: 450px) {
         #editor {
-          border: 1px solid var(--divider-color);
-          padding: 12px;
+          margin: 0 -12px;
         }
-        @media (max-width: 450px) {
-          #editor {
-            margin: 0 -12px;
-          }
-        }
+      }
 
-        .gui-mode-button {
-          margin-right: auto;
-        }
-      `,
-    ];
+      .gui-mode-button {
+        margin-right: auto;
+      }
+    `;
   }
 }
