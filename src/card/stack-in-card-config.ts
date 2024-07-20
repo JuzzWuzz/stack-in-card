@@ -1,5 +1,5 @@
-import { LovelaceCardConfig } from "juzz-ha-helper";
-import { any, array, boolean, object, optional, string } from "superstruct";
+import { LovelaceCardConfig, baseLovelaceCardConfig } from "juzz-ha-helper";
+import { any, array, assign, boolean, object, optional, string } from "superstruct";
 
 export interface StackInCardConfig extends LovelaceCardConfig {
   title?: string;
