@@ -79,7 +79,7 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
           <ha-formfield alignEnd .label=${"Horizontal"}>
             <ha-switch
               .checked=${this._config!.horizontal}
-              .configValue=${"horizontal"}
+              .configValue=${"horizontal"}  
               @change=${this._handleConfigChanged}
             ></ha-switch>
           </ha-formfield>
@@ -93,18 +93,18 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
         </div>
         <h3>Cards (Required)</h3>
         <div class="toolbar">
-          <paper-tabs scrollable .selected=${selected} @iron-activate=${this._handleSelectedCard}>
-            ${this._config.cards.map((_card, i) => html` <paper-tab> ${i + 1} </paper-tab> `)}
-          </paper-tabs>
-          <paper-tabs
-            id="add-card"
-            .selected=${selected === numcards ? "0" : undefined}
-            @iron-activate=${this._handleSelectedCard}
-          >
-            <paper-tab>
-              <ha-svg-icon .path=${mdiPlus}></ha-svg-icon>
-            </paper-tab>
-          </paper-tabs>
+          <sl-tab-group @sl-tab-show=${this._handleSelectedCard}>
+            ${this._config.cards.map(
+              (_card, i) =>
+                html`<sl-tab slot="nav" .panel=${i} .active=${i === selected}>
+              ${i + 1}
+              </sl-tab>`
+               )}
+          </sl-tab-group>
+          <ha-icon-button
+            @click=${this._handleAddCard}
+            .path=${mdiPlus}
+          ></ha-icon-button>
         </div>
         <div id="editor">
           ${selected < numcards
@@ -165,14 +165,16 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
     `;
   }
 
+  protected async _handleAddCard() {
+    this._selectedCard = this._config!.cards.length;
+    await this.updateComplete;
+    (this.renderRoot.querySelector("sl-tab-group") as any)?.syncIndicator();
+  }
+
   protected _handleSelectedCard(ev) {
-    if (ev.target.id === "add-card") {
-      this._selectedCard = this._config!.cards.length;
-      return;
-    }
     this._setMode(true);
     this._guiModeAvailable = true;
-    this._selectedCard = parseInt(ev.detail.selected, 10);
+    this._selectedCard = parseInt(ev.detail.name, 10);
   }
 
   protected _handleConfigChanged(ev: HASSDomEvent<ConfigChangedEvent>) {
@@ -319,17 +321,15 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
       }
       .toolbar {
         display: flex;
-        --paper-tabs-selection-bar-color: var(--primary-color);
-        --paper-tab-ink: var(--primary-color);
+        justify-content: space-between;
+        align-items: center;
       }
-      paper-tabs {
-        display: flex;
-        font-size: 14px;
+      sl-tab-group {
         flex-grow: 1;
       }
       #add-card {
-        max-width: 32px;
-        padding: 0;
+        min-width: 0;
+        --ha-tab-track-color: var(--card-background-color);
       }
 
       #card-options {
