@@ -5,10 +5,10 @@ import {
   LovelaceCardConfig,
   LovelaceCardEditor,
   computeCardSize,
+  computeRTLDirection,
 } from "juzz-ha-helper";
 import { LitElement, PropertyValues, TemplateResult, css, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { ifDefined } from "lit/directives/if-defined.js";
 
 import {
   CARD_DEFAULT_DISABLE_PADDING,
@@ -114,8 +114,6 @@ export class StackInCard extends LitElement implements LovelaceCard {
       if (CardHelper.SPECIAL_TYPES.has(updatedConfig.type)) {
         card.style.paddingLeft = "16px";
         card.style.paddingRight = "16px";
-      } else {
-        this.styleCard(card);
       }
 
       // Return the styled card
@@ -144,20 +142,23 @@ export class StackInCard extends LitElement implements LovelaceCard {
       return html``;
     }
 
-    const cardId = this._config.horizontal ? "stack-in-horizontal" : "stack-in-vertical";
-    const classes = ["bottom-padding"];
-    if (!this._config.title) {
-      classes.push("top-padding");
+    const classes = [this._config.horizontal ? "stack-in-horizontal" : "stack-in-vertical"];
+    if (!this._config.disable_padding) {
+      if (!this._config.title) {
+        classes.push("top-padding");
+      }
+      classes.push("bottom-padding");
     }
-    if (this._config.disable_padding) {
-      classes.length = 0;
-    }
-    const cardHTML = this._cards
-      ? html`<div id=${cardId} class=${classes.join(" ")}>${this._cards}</div>`
-      : html``;
 
     try {
-      return html`<ha-card header=${ifDefined(this._config.title)}> ${cardHTML} </ha-card>`;
+      return html`
+      ${this._config.title
+        ? html`<h1 class="card-header">${this._config.title}</h1>`
+        : ""}
+      <div id="root" class=${classes.join(" ")} dir=${this.hass ? computeRTLDirection(this.hass) : "ltr"}>
+        ${this._cards}
+      </div>
+    `;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       const errorCard = document.createElement("hui-error-card") as LovelaceCard;
@@ -171,80 +172,74 @@ export class StackInCard extends LitElement implements LovelaceCard {
   }
 
   /**
-   * Style the given card
-   */
-  private styleCard(element: LovelaceCard | undefined) {
-    const _loopChildNodes = (element: LovelaceCard | undefined) => {
-      if (!element) return;
-      element.childNodes.forEach((child) => {
-        if ((child as LovelaceCard).style) {
-          (child as LovelaceCard).style.margin = "0px";
-        }
-        this.styleCard(child as LovelaceCard);
-      });
-    };
-    const _tryStyleHACard = (maybeHACard: HTMLElement | null): boolean => {
-      if (maybeHACard) {
-        maybeHACard.style.boxShadow = "none";
-        maybeHACard.style.borderRadius = "0";
-        maybeHACard.style.border = "none";
-        return true;
-      }
-      return false;
-    };
-    const _styleCard = (element: LovelaceCard | undefined) => {
-      if (!element) return;
-      if (element.shadowRoot) {
-        if (!_tryStyleHACard(element.shadowRoot.querySelector("ha-card"))) {
-          const otherElements =
-            element.shadowRoot.getElementById("root") || element.shadowRoot.getElementById("card");
-          _loopChildNodes(otherElements as LovelaceCard);
-        }
-      } else {
-        if (typeof element.querySelector === "function") {
-          _tryStyleHACard(element.querySelector("ha-card"));
-        }
-        _loopChildNodes(element);
-      }
-    };
-
-    if ((element as unknown as LitElement).updateComplete) {
-      (element as unknown as LitElement).updateComplete.then(() => {
-        _styleCard(element);
-      });
-    } else {
-      _styleCard(element);
-    }
-  }
-
-  /**
    * Custom CSS for this card
    */
-  static styles = css`
-    #stack-in-horizontal {
-      display: flex;
-      height: 100%;
+    static get styles() {
+      return css`
+        :host {
+          background: var(
+            --ha-card-background,
+            var(--card-background-color, white)
+          );
+          -webkit-backdrop-filter: var(--ha-card-backdrop-filter, none);
+          backdrop-filter: var(--ha-card-backdrop-filter, none);
+          box-shadow: var(--ha-card-box-shadow, none);
+          box-sizing: border-box;
+          border-radius: var(--ha-card-border-radius, 12px);
+          border-width: var(--ha-card-border-width, 1px);
+          border-style: solid;
+          border-color: var(--ha-card-border-color, var(--divider-color, #e0e0e0));
+          color: var(--primary-text-color);
+          display: block;
+          transition: all 0.3s ease-out;
+          position: relative;
+        }
+        .card-header {
+          color: var(--ha-card-header-color, var(--primary-text-color));
+          text-align: var(--ha-stack-title-text-align, start);
+          font-family: var(--ha-card-header-font-family, inherit);
+          font-size: var(--ha-card-header-font-size, var(--ha-font-size-2xl));
+          font-weight: var(--ha-font-weight-normal);
+          margin-block-start: 0px;
+          margin-block-end: 0px;
+          letter-spacing: -0.012em;
+          line-height: var(--ha-line-height-condensed);
+          display: block;
+          padding: 24px 16px 16px;
+        }
+        :host([ispanel]) #root {
+          --ha-card-border-radius: var(--restore-card-border-radius);
+          --ha-card-border-width: var(--restore-card-border-width);
+          --ha-card-box-shadow: var(--restore-card-box-shadow);
+        }
+        .stack-in-horizontal {
+          display: flex;
+          height: 100%;
+        }
+        .stack-in-horizontal > hui-card {
+          display: contents;
+        }
+        .stack-in-horizontal > hui-card > * {
+          flex: 1 1 0;
+          min-width: 0;
+          margin: 0px; // ???
+        }
+        .stack-in-vertical {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+        }
+        .stack-in-vertical > hui-card > * {
+          margin: 0px; // ???
+        }
+        .top-padding {
+          padding-top: var(--ha-card-border-radius, 12px);
+        }
+        .bottom-padding {
+          padding-bottom: var(--ha-card-border-radius, 12px);
+        }
+      `;
     }
-    #stack-in-horizontal > * {
-      flex: 1 1 0;
-      min-width: 0px;
-      margin: 0px;
-    }
-    #stack-in-vertical {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    #stack-in-vertical > * {
-      margin: 0px;
-    }
-    .top-padding {
-      padding-top: var(--ha-card-border-radius, 12px);
-    }
-    .bottom-padding {
-      padding-bottom: var(--ha-card-border-radius, 12px);
-    }
-  `;
 
   /**
    * Get the size of the card based on the size of the cards it holds

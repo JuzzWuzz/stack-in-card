@@ -23,3 +23,20 @@ export const StackInCardConfigStruct = assign(
     cards: array(any()),
   }),
 );
+
+export const SCHEMA = [
+  {
+    name: "title",
+    selector: { text: {} },
+  },
+  {
+    name: "horizontal",
+    required: false,
+    selector: { boolean: {} },
+  },
+  {
+    name: "disable_padding",
+    required: false,
+    selector: { boolean: {} },
+  },
+] as const;

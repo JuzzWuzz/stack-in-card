@@ -1,34 +1,49 @@
 import {
-  mdiArrowLeft,
-  mdiArrowRight,
   mdiCodeBraces,
+  mdiContentCopy,
+  mdiContentCut,
   mdiDelete,
   mdiListBoxOutline,
   mdiPlus,
 } from "@mdi/js";
+import deepClone from "deep-clone-simple";
 import {
+  CardHelper,
   ConfigChangedEvent,
-  EditorTarget,
   GUIModeChangedEvent,
   HASSDomEvent,
+  HaFormSchema,
+  SchemaUnion,
   HomeAssistant,
   LovelaceCardConfig,
   LovelaceCardEditor,
   LovelaceConfig,
   fireEvent,
+  storage
 } from "juzz-ha-helper";
 import { CSSResultGroup, LitElement, TemplateResult, css, html } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { assert } from "superstruct";
+import { keyed } from "lit/directives/keyed.js";
 
 import { CARD_DEFAULT_DISABLE_PADDING, CARD_DEFAULT_HORIZONTAL, CARD_EDITOR_NAME } from "./const";
-import { StackInCardConfig, StackInCardConfigStruct } from "./stack-in-card-config";
+import { SCHEMA, StackInCardConfig, StackInCardConfigStruct } from "./stack-in-card-config";
 
 @customElement(CARD_EDITOR_NAME)
 export class StackInCardEditor extends LitElement implements LovelaceCardEditor {
   @property({ attribute: false }) private _hass?: HomeAssistant;
 
   @property({ attribute: false }) public lovelace?: LovelaceConfig;
+
+  @storage({
+    key: "dashboardCardClipboard",
+    state: false,
+    subscribe: false,
+    storage: "sessionStorage",
+  })
+  protected _clipboard?: LovelaceCardConfig;
+
+  @state() private initialized = false;
 
   @state() private _config?: StackInCardConfig;
 
@@ -37,6 +52,10 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
   @state() protected _GUImode = true;
 
   @state() protected _guiModeAvailable? = true;
+
+  protected _keys = new Map<string, string>();
+
+  protected _schema: readonly HaFormSchema[] = SCHEMA;
 
   @query("hui-card-element-editor") protected _cardEditorElement;
 
@@ -48,6 +67,23 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
     this._hass = hass;
   }
 
+  public connectedCallback() {
+    super.connectedCallback();
+    if (this.initialized) {
+      return;
+    }
+
+    this.initialize().then(() => {
+      this.initialized = true;
+    });
+  }
+
+  private async initialize() {
+    const cardHelper = await CardHelper.getInstance();
+    await cardHelper.loadHuiCardPicker();
+    this.initialized = true;
+  }
+
   public setConfig(config: StackInCardConfig): void {
     assert(config, StackInCardConfigStruct);
     this._config = config;
@@ -55,6 +91,10 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
 
   public focusYamlEditor() {
     this._cardEditorElement?.focusYamlEditor();
+  }
+
+  protected formData(): object {
+    return this._config!;
   }
 
   protected render(): TemplateResult {
@@ -68,30 +108,14 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
     const isGuiMode = !this._cardEditorElement || this._GUImode;
 
     return html`
+      <ha-form
+        .hass=${this._hass}
+        .data=${this.formData()}
+        .schema=${this._schema}
+        .computeLabel=${this._computeLabelCallback}
+        @value-changed=${this._valueChanged}
+      ></ha-form>
       <div class="card-config">
-        <ha-textfield
-          .label=${"Title (Optional)"}
-          .value=${this._config.title || ""}
-          .configValue=${"title"}
-          @input=${this._handleConfigChanged}
-        ></ha-textfield>
-        <div class="side-by-side">
-          <ha-formfield alignEnd .label=${"Horizontal"}>
-            <ha-switch
-              .checked=${this._config!.horizontal}
-              .configValue=${"horizontal"}  
-              @change=${this._handleConfigChanged}
-            ></ha-switch>
-          </ha-formfield>
-          <ha-formfield alignEnd spaceBetween .label=${"Disable Padding"}>
-            <ha-switch
-              .checked=${this._config!.disable_padding}
-              .configValue=${"disable_padding"}
-              @change=${this._handleConfigChanged}
-            ></ha-switch>
-          </ha-formfield>
-        </div>
-        <h3>Cards (Required)</h3>
         <div class="toolbar">
           <sl-tab-group @sl-tab-show=${this._handleSelectedCard}>
             ${this._config.cards.map(
@@ -115,27 +139,41 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
                     @click=${this._toggleMode}
                     .disabled=${!this._guiModeAvailable}
                     .label=${this._hass!.localize(
-                      !this._cardEditorElement || this._GUImode
+                      this._GUImode
                         ? "ui.panel.lovelace.editor.edit_card.show_code_editor"
                         : "ui.panel.lovelace.editor.edit_card.show_visual_editor",
                     )}
                     .path=${isGuiMode ? mdiCodeBraces : mdiListBoxOutline}
                   ></ha-icon-button>
 
-                  <ha-icon-button
+                  <ha-icon-button-arrow-prev
                     .disabled=${selected === 0}
                     .label=${this._hass!.localize("ui.panel.lovelace.editor.edit_card.move_before")}
-                    .path=${mdiArrowLeft}
                     @click=${this._handleMove}
                     .move=${-1}
-                  ></ha-icon-button>
+                  ></ha-icon-button-arrow-prev>
 
-                  <ha-icon-button
+                  <ha-icon-button-arrow-next
                     .label=${this._hass!.localize("ui.panel.lovelace.editor.edit_card.move_after")}
-                    .path=${mdiArrowRight}
                     .disabled=${selected === numcards - 1}
                     @click=${this._handleMove}
                     .move=${1}
+                  ></ha-icon-button-arrow-next>
+
+                  <ha-icon-button
+                    .label=${this._hass!.localize(
+                      "ui.panel.lovelace.editor.edit_card.copy"
+                    )}
+                    .path=${mdiContentCopy}
+                    @click=${this._handleCopyCard}
+                  ></ha-icon-button>
+
+                  <ha-icon-button
+                    .label=${this._hass!.localize(
+                      "ui.panel.lovelace.editor.edit_card.cut"
+                    )}
+                    .path=${mdiContentCut}
+                    @click=${this._handleCutCard}
                   ></ha-icon-button>
 
                   <ha-icon-button
@@ -144,14 +182,16 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
                     @click=${this._handleDeleteCard}
                   ></ha-icon-button>
                 </div>
-                <hui-card-element-editor
-                  .hass=${this._hass}
-                  .value=${this._config.cards[this._selectedCard]}
-                  .lovelace=${this.lovelace}
-                  .configValue=${"cards"}
-                  @config-changed=${this._handleConfigChanged}
-                  @GUImode-changed=${this._handleGUIModeChanged}
-                ></hui-card-element-editor>
+                ${keyed(
+                  this._getKey(this._config.cards, selected),
+                  html`<hui-card-element-editor
+                    .hass=${this._hass}
+                    .value=${this._config.cards[selected]}
+                    .lovelace=${this.lovelace}
+                    @config-changed=${this._handleConfigChanged}
+                    @GUImode-changed=${this._handleGUIModeChanged}
+                  ></hui-card-element-editor>`
+                )}
               `
             : html`
                 <hui-card-picker
@@ -165,6 +205,15 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
     `;
   }
 
+  private _getKey(cards: LovelaceCardConfig[], index: number): string {
+    const key = `${index}-${cards.length}`;
+    if (!this._keys.has(key)) {
+      this._keys.set(key, Math.random().toString());
+    }
+
+    return this._keys.get(key)!;
+  }
+
   protected async _handleAddCard() {
     this._selectedCard = this._config!.cards.length;
     await this.updateComplete;
@@ -172,7 +221,7 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
   }
 
   protected _handleSelectedCard(ev) {
-    this._setMode(true);
+    this._GUImode = true;
     this._guiModeAvailable = true;
     this._selectedCard = parseInt(ev.detail.name, 10);
   }
@@ -183,41 +232,37 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
       return;
     }
 
-    const target = ev.target! as EditorTarget;
-    const configValue = target.configValue;
-    const value = target.checked !== undefined ? target.checked : target.value;
-
-    // Ignore updates if the data is the same
-    if (
-      (configValue === "title" && value === this._config.title) ||
-      (configValue === "horizontal" && value === this._config.horizontal) ||
-      (configValue === "disable_padding" && value === this._config.disable_padding)
-    ) {
-      return;
-    }
-
-    if (configValue === "cards") {
-      const cards = [...this._config.cards];
-      cards[this._selectedCard] = ev.detail.config as LovelaceCardConfig;
-      this._config = { ...this._config, cards };
-      this._guiModeAvailable = ev.detail.guiModeAvailable;
-    } else if (configValue) {
-      if (
-        value === "" ||
-        (configValue === "horizontal" && value === CARD_DEFAULT_HORIZONTAL) ||
-        (configValue === "disable_padding" && value === CARD_DEFAULT_DISABLE_PADDING)
-      ) {
-        this._config = { ...this._config };
-        delete this._config[configValue!];
-      } else {
-        this._config = {
-          ...this._config,
-          [configValue]: value,
-        };
-      }
-    }
+    const cards = [...this._config.cards];
+    const newCard = ev.detail.config as LovelaceCardConfig;
+    cards[this._selectedCard] = newCard;
+    this._config = { ...this._config, cards };
+    this._guiModeAvailable = ev.detail.guiModeAvailable;
     fireEvent(this, "config-changed", { config: this._config });
   }
+
+  protected _valueChanged(ev: CustomEvent): void {
+    // If some of the config values are the default values, we remove them
+    const config = ev.detail.value as StackInCardConfig;
+    if (config.disable_padding === CARD_DEFAULT_DISABLE_PADDING) {
+      delete config.disable_padding;
+    }
+    if (config.horizontal === CARD_DEFAULT_HORIZONTAL) {
+      delete config.horizontal;
+    }
+
+    fireEvent(this, "config-changed", { config: config });
+  }
+
+  private _computeLabelCallback = (schema: SchemaUnion<typeof SCHEMA>) => {
+    switch (schema.name) {
+      case "horizontal":
+        return "Horizontal";
+      case "disable_padding":
+        return "Disable Padding";
+      case "title":
+        return this._hass!.localize("ui.panel.lovelace.editor.card.generic.title");
+    }
+  };
 
   protected _handleCardPicked(ev) {
     ev.stopPropagation();
@@ -230,10 +275,21 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
       config,
     ];
     this._config = { ...this._config, cards };
+    this._keys.clear();
     fireEvent(this, "config-changed", { config: this._config });
   }
 
-  // Others
+  protected _handleCopyCard() {
+    if (!this._config) {
+      return;
+    }
+    this._clipboard = deepClone(this._config.cards[this._selectedCard]);
+  }
+
+  protected _handleCutCard() {
+    this._handleCopyCard();
+    this._handleDeleteCard();
+  }
 
   protected _handleDeleteCard() {
     if (!this._config) {
@@ -243,6 +299,7 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
     cards.splice(this._selectedCard, 1);
     this._config = { ...this._config, cards };
     this._selectedCard = Math.max(0, this._selectedCard - 1);
+    this._keys.clear();
     fireEvent(this, "config-changed", { config: this._config });
   }
 
@@ -262,6 +319,7 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
       cards,
     };
     this._selectedCard = target;
+    this._keys.clear();
     fireEvent(this, "config-changed", { config: this._config });
   }
 
@@ -273,13 +331,6 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
 
   protected _toggleMode(): void {
     this._cardEditorElement?.toggleMode();
-  }
-
-  protected _setMode(value: boolean): void {
-    this._GUImode = value;
-    if (this._cardEditorElement) {
-      this._cardEditorElement!.GUImode = value;
-    }
   }
 
   static get styles(): CSSResultGroup {

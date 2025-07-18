@@ -1,6 +1,6 @@
 {
   "name": "stack-in-card",
-  "version": "1.3.0",
+  "version": "1.5.0",
   "description": "Allows you to group multiple cards into either a horizontal or vertical space in the same column.",
   "main": "src/stack-in-card.ts",
   "type": "module",
@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",
+    "deep-clone-simple": "^1.1.1",
     "home-assistant-js-websocket": "^9.5.0",
     "juzz-ha-helper": "file:../juzz-ha-helper",
     "lit": "^3.3.1",
