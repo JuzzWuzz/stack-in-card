@@ -184,13 +184,25 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
                 </div>
                 ${keyed(
                   this._getKey(this._config.cards, selected),
-                  html`<hui-card-element-editor
-                    .hass=${this._hass}
-                    .value=${this._config.cards[selected]}
-                    .lovelace=${this.lovelace}
-                    @config-changed=${this._handleConfigChanged}
-                    @GUImode-changed=${this._handleGUIModeChanged}
-                  ></hui-card-element-editor>`
+                  CardHelper.SPECIAL_TYPES.has(this._config.cards[selected].type)
+                  ? html`
+                      <hui-row-element-editor
+                        .hass=${this._hass}
+                        .value=${this._config.cards[selected]}
+                        .lovelace=${this.lovelace}
+                        @config-changed=${this._handleConfigChanged}
+                        @GUImode-changed=${this._handleGUIModeChanged}
+                      ></hui-row-element-editor>
+                    `
+                  : html`
+                      <hui-card-element-editor
+                        .hass=${this._hass}
+                        .value=${this._config.cards[selected]}
+                        .lovelace=${this.lovelace}
+                        @config-changed=${this._handleConfigChanged}
+                        @GUImode-changed=${this._handleGUIModeChanged}
+                      ></hui-card-element-editor>
+                    `
                 )}
               `
             : html`

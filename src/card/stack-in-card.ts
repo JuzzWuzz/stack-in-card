@@ -219,18 +219,18 @@ export class StackInCard extends LitElement implements LovelaceCard {
         .stack-in-horizontal > hui-card {
           display: contents;
         }
-        .stack-in-horizontal > hui-card > * {
+        .stack-in-horizontal > * {
           flex: 1 1 0;
           min-width: 0;
-          margin: 0px; // ???
+          margin: 0px;
         }
         .stack-in-vertical {
           display: flex;
           flex-direction: column;
           height: 100%;
         }
-        .stack-in-vertical > hui-card > * {
-          margin: 0px; // ???
+        .stack-in-vertical > * {
+          margin: 0px;
         }
         .top-padding {
           padding-top: var(--ha-card-border-radius, 12px);
