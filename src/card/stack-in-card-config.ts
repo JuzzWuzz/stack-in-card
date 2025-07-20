@@ -5,6 +5,7 @@ export interface StackInCardConfig extends LovelaceCardConfig {
   title?: string;
   horizontal?: boolean;
   disable_padding?: boolean;
+  center_horizontal_cards?: boolean;
   cards: LovelaceCardConfig[];
 }
 
@@ -12,6 +13,7 @@ export interface StackInCardConfig extends LovelaceCardConfig {
 export type StackInCardConfigStrict = StackInCardConfig & {
   horizontal: boolean;
   disable_padding: boolean;
+  center_horizontal_cards: boolean;
 };
 
 export const StackInCardConfigStruct = assign(
@@ -20,6 +22,7 @@ export const StackInCardConfigStruct = assign(
     title: optional(string()),
     horizontal: optional(boolean()),
     disable_padding: optional(boolean()),
+    center_horizontal_cards: optional(boolean()),
     cards: array(any()),
   }),
 );
@@ -36,6 +39,11 @@ export const SCHEMA = [
   },
   {
     name: "disable_padding",
+    required: false,
+    selector: { boolean: {} },
+  },
+  {
+    name: "center_horizontal_cards",
     required: false,
     selector: { boolean: {} },
   },

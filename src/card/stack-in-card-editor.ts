@@ -270,7 +270,9 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
       case "horizontal":
         return "Horizontal";
       case "disable_padding":
-        return "Disable Padding";
+        return "Disable top & botom padding";
+      case "center_horizontal_cards":
+        return "Center horizontal cards";
       case "title":
         return this._hass!.localize("ui.panel.lovelace.editor.card.generic.title");
     }
@@ -351,12 +353,6 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
         /* Cancels overlapping Margins for HAForm + Card Config options */
         overflow: auto;
       }
-      ha-formfield {
-        display: flex;
-        height: 56px;
-        align-items: center;
-        --mdc-typography-body2-font-size: 1em;
-      }
       ha-switch {
         padding: 16px 6px;
       }
@@ -367,10 +363,14 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
       .side-by-side > * {
         flex: 1;
         padding-right: 8px;
+        padding-inline-end: 8px;
+        padding-inline-start: initial;
       }
       .side-by-side > *:last-child {
         flex: 1;
         padding-right: 0;
+        padding-inline-end: 0;
+        padding-inline-start: initial;
       }
       .suffix {
         margin: 0 8px;
@@ -382,6 +382,23 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
         margin-top: 8px;
         display: block;
       }
+      ha-expansion-panel {
+        display: block;
+        --expansion-panel-content-padding: 0;
+        border-radius: 6px;
+        --ha-card-border-radius: 6px;
+      }
+      ha-expansion-panel .content {
+        padding: 12px;
+      }
+      ha-expansion-panel > *[slot="header"] {
+        margin: 0;
+        font-size: inherit;
+        font-weight: inherit;
+      }
+      ha-expansion-panel ha-svg-icon {
+        color: var(--secondary-text-color);
+      }
       .toolbar {
         display: flex;
         justify-content: space-between;
@@ -389,18 +406,14 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
       }
       sl-tab-group {
         flex-grow: 1;
-      }
-      #add-card {
         min-width: 0;
         --ha-tab-track-color: var(--card-background-color);
       }
-
       #card-options {
         display: flex;
         justify-content: flex-end;
         width: 100%;
       }
-
       #editor {
         border: 1px solid var(--divider-color);
         padding: 12px;
@@ -410,9 +423,10 @@ export class StackInCardEditor extends LitElement implements LovelaceCardEditor 
           margin: 0 -12px;
         }
       }
-
       .gui-mode-button {
         margin-right: auto;
+        margin-inline-end: auto;
+        margin-inline-start: initial;
       }
     `;
   }

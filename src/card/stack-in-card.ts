@@ -11,6 +11,7 @@ import { LitElement, PropertyValues, TemplateResult, css, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import {
+  CARD_DEFAULT_CENTER_HORIZONTAL_CARDS,
   CARD_DEFAULT_DISABLE_PADDING,
   CARD_DEFAULT_HORIZONTAL,
   CARD_EDITOR_NAME,
@@ -68,6 +69,7 @@ export class StackInCard extends LitElement implements LovelaceCard {
           type: `custom:${CARD_NAME}`,
           horizontal: CARD_DEFAULT_HORIZONTAL,
           disable_padding: CARD_DEFAULT_DISABLE_PADDING,
+          center_horizontal_cards: CARD_DEFAULT_CENTER_HORIZONTAL_CARDS,
         },
         ...config,
       };
@@ -111,7 +113,7 @@ export class StackInCard extends LitElement implements LovelaceCard {
       const card = await this._createCardElement(updatedConfig);
 
       // The special row styles need padding else they bug out
-      if (CardHelper.SPECIAL_TYPES.has(updatedConfig.type)) {
+      if (!config.horizontal && CardHelper.SPECIAL_TYPES.has(updatedConfig.type)) {
         card.style.paddingLeft = "16px";
         card.style.paddingRight = "16px";
       }
@@ -149,6 +151,9 @@ export class StackInCard extends LitElement implements LovelaceCard {
       }
       classes.push("bottom-padding");
     }
+    if (this._config.horizontal && this._config.center_horizontal_cards) {
+      classes.push("center-horizontal-cards");
+    }
 
     try {
       return html`
@@ -177,10 +182,7 @@ export class StackInCard extends LitElement implements LovelaceCard {
     static get styles() {
       return css`
         :host {
-          background: var(
-            --ha-card-background,
-            var(--card-background-color, white)
-          );
+          background: var(--ha-card-background, var(--card-background-color, white));
           -webkit-backdrop-filter: var(--ha-card-backdrop-filter, none);
           backdrop-filter: var(--ha-card-backdrop-filter, none);
           box-shadow: var(--ha-card-box-shadow, none);
@@ -216,21 +218,17 @@ export class StackInCard extends LitElement implements LovelaceCard {
           display: flex;
           height: 100%;
         }
-        .stack-in-horizontal > hui-card {
-          display: contents;
-        }
         .stack-in-horizontal > * {
           flex: 1 1 0;
           min-width: 0;
-          margin: 0px;
+        }
+        .center-horizontal-cards > * {
+          align-content: center;
         }
         .stack-in-vertical {
           display: flex;
           flex-direction: column;
           height: 100%;
-        }
-        .stack-in-vertical > * {
-          margin: 0px;
         }
         .top-padding {
           padding-top: var(--ha-card-border-radius, 12px);
@@ -271,9 +269,7 @@ export class StackInCard extends LitElement implements LovelaceCard {
   private async _createCardElement(cardConfig: LovelaceCardConfig): Promise<LovelaceCard> {
     const cardHelper = await CardHelper.getInstance();
     const element = cardHelper.createElement(cardConfig);
-    if (this._hass) {
-      element.hass = this._hass;
-    }
+    element.hass = this._hass;
     element.addEventListener(
       "ll-rebuild",
       (ev) => {

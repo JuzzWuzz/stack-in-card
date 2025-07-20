@@ -1,6 +1,6 @@
 {
   "name": "stack-in-card",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Allows you to group multiple cards into either a horizontal or vertical space in the same column.",
   "main": "src/stack-in-card.ts",
   "type": "module",
